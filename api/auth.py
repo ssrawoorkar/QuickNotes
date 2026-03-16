@@ -18,7 +18,7 @@ auth_router = APIRouter(prefix="/auth")
 GOOGLE_CLIENT_ID     = os.getenv("GOOGLE_CLIENT_ID", "")
 GOOGLE_CLIENT_SECRET = os.getenv("GOOGLE_CLIENT_SECRET", "")
 SESSION_SECRET       = os.getenv("SESSION_SECRET", "change-this-to-a-random-secret")
-REDIRECT_URI         = "http://localhost:8000/auth/google/callback"
+REDIRECT_URI         = os.getenv("REDIRECT_URI", "http://localhost:8000/auth/google/callback")
 
 COOKIE_NAME          = "qn_session"
 COOKIE_MAX_AGE       = 7 * 24 * 60 * 60  # 7 days in seconds
