@@ -77,20 +77,25 @@ function buildRecognition() {
 
   const r = new SR();
   r.continuous      = true;
-  r.interimResults  = false;
+  r.interimResults  = true;
   r.lang            = "en-US";
 
   r.onresult = (event) => {
+    let interimText = "";
     for (let i = event.resultIndex; i < event.results.length; i++) {
       if (event.results[i].isFinal) {
         const text      = event.results[i][0].transcript.trim();
         const timestamp = new Date().toLocaleTimeString("en-US", { hour12: false });
         if (text) {
+          removeInterimLine();
           appendTranscript(timestamp, text);
           send({ action: "transcript", timestamp, text });
         }
+      } else {
+        interimText += event.results[i][0].transcript;
       }
     }
+    if (interimText) showInterimLine(interimText);
   };
 
   r.onerror = (e) => {
@@ -145,6 +150,23 @@ btnStop.addEventListener("click", () => {
 });
 
 // ── Transcript ───────────────────────────────────────────────────────────
+
+function showInterimLine(text) {
+  let interim = document.getElementById("interim-line");
+  if (!interim) {
+    interim = document.createElement("div");
+    interim.id = "interim-line";
+    interim.className = "t-line t-interim";
+    transcriptOutput.appendChild(interim);
+  }
+  interim.textContent = text;
+  transcriptOutput.scrollTop = transcriptOutput.scrollHeight;
+}
+
+function removeInterimLine() {
+  const interim = document.getElementById("interim-line");
+  if (interim) interim.remove();
+}
 
 function appendTranscript(timestamp, text) {
   const line = document.createElement("div");

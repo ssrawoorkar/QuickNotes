@@ -378,6 +378,12 @@ main {
 .card-body::-webkit-scrollbar-thumb { background: var(--border); border-radius: 4px; }
 .card-body::-webkit-scrollbar-thumb:hover { background: #C0D0DC; }
 
+/* ─── Interim transcript line ─────────────────────────────── */
+.t-interim {
+  color: var(--text-muted);
+  font-style: italic;
+}
+
 /* ─── Empty state ─────────────────────────────────────────── */
 .empty {
   color: var(--text-muted);
