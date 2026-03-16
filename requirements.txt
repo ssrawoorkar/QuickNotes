@@ -2,9 +2,6 @@ fastapi
 python-dotenv
 uvicorn[standard]
 websockets
-sounddevice
-numpy
-faster-whisper
 anthropic
 python-multipart
 httpx

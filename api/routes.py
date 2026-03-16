@@ -5,8 +5,6 @@ import logging
 from fastapi import APIRouter, WebSocket, WebSocketDisconnect
 from fastapi.responses import JSONResponse
 
-from app.audio.recorder import AudioRecorder
-from app.transcription.whisper_engine import WhisperEngine
 from app.summarization.note_generator import NoteGenerator, SUMMARIZE_INTERVAL
 from app.storage.transcript_store import TranscriptStore
 from app.storage.notes_store import NotesStore
@@ -17,14 +15,12 @@ router = APIRouter()
 # Shared singletons (one per server process)
 transcript_store = TranscriptStore()
 notes_store      = NotesStore()
-whisper          = WhisperEngine()
 note_gen         = NoteGenerator()
-recorder         = AudioRecorder(on_chunk=None)
 
 
 @router.websocket("/ws")
 async def websocket_endpoint(ws: WebSocket):
-    """Main WebSocket: start/stop commands → streams transcript lines and notes."""
+    """Main WebSocket: receives transcript lines from browser, streams notes back."""
     await ws.accept()
     logger.info("WebSocket client connected")
 
@@ -55,22 +51,6 @@ async def websocket_endpoint(ws: WebSocket):
         except asyncio.CancelledError:
             pass
 
-    def on_audio_chunk(audio_data):
-        """Called from the recorder thread; transcribes and ships to the event loop."""
-        result = whisper.transcribe(audio_data)
-        if result:
-            asyncio.run_coroutine_threadsafe(
-                ws.send_json({
-                    "type":      "transcript",
-                    "timestamp": result["timestamp"],
-                    "text":      result["text"],
-                }),
-                loop,
-            )
-            transcript_store.append(result["timestamp"], result["text"])
-
-    recorder.on_chunk = on_audio_chunk
-
     # ── Command loop ────────────────────────────────────────────────────────
 
     try:
@@ -81,13 +61,17 @@ async def websocket_endpoint(ws: WebSocket):
             if action == "start" and not recording:
                 transcript_store.clear()
                 notes_store.clear()
-                recorder.start()
-                recording = True
+                recording      = True
                 summarize_task = asyncio.create_task(summarize_loop())
                 logger.info("Recording started")
 
+            elif action == "transcript":
+                timestamp = data.get("timestamp", "")
+                text      = data.get("text", "")
+                if text:
+                    transcript_store.append(timestamp, text)
+
             elif action == "stop" and recording:
-                recorder.stop()
                 recording = False
 
                 if summarize_task:
@@ -103,8 +87,6 @@ async def websocket_endpoint(ws: WebSocket):
 
     except WebSocketDisconnect:
         logger.info("WebSocket client disconnected")
-        if recording:
-            recorder.stop()
         if summarize_task:
             summarize_task.cancel()
 

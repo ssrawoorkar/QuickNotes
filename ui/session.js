@@ -1,4 +1,7 @@
-const WS_URL = "ws://localhost:8000/ws";
+// WebSocket URL — works locally and in production
+const WS_URL = location.protocol === "https:"
+  ? `wss://${location.host}/ws`
+  : `ws://${location.host}/ws`;
 
 const btnStart         = document.getElementById("btn-start");
 const btnStop          = document.getElementById("btn-stop");
@@ -11,25 +14,19 @@ const profileName      = document.getElementById("profile-name");
 const profileTrigger   = document.getElementById("profile-trigger");
 const profileDropdown  = document.getElementById("profile-dropdown");
 
-let ws = null;
+let ws          = null;
+let recognition = null;
+let isRecording = false;
 
 // ── Auth: load current user ──────────────────────────────────────────────
 
 async function loadUser() {
   try {
     const res = await fetch("/auth/me");
-    if (res.status === 401) {
-      window.location.href = "/login";
-      return;
-    }
+    if (res.status === 401) { window.location.href = "/login"; return; }
     const user = await res.json();
-    if (user.picture) {
-      profileAvatar.src = user.picture;
-      profileAvatar.alt = user.name || "User avatar";
-    }
-    if (user.name) {
-      profileName.textContent = user.name;
-    }
+    if (user.picture) { profileAvatar.src = user.picture; profileAvatar.alt = user.name || "User avatar"; }
+    if (user.name)    { profileName.textContent = user.name; }
   } catch {
     window.location.href = "/login";
   }
@@ -59,30 +56,75 @@ document.addEventListener("click", (e) => {
 
 function connect(onOpen) {
   ws = new WebSocket(WS_URL);
-  ws.onopen    = () => { setStatus("Connected", false); if (onOpen) onOpen(); };
+  ws.onopen    = () => { if (onOpen) onOpen(); };
   ws.onmessage = (e) => {
     const msg = JSON.parse(e.data);
-    if (msg.type === "transcript") appendTranscript(msg.timestamp, msg.text);
-    if (msg.type === "notes")      renderNotes(msg.text);
+    if (msg.type === "notes") renderNotes(msg.text);
   };
-  ws.onerror   = () => setStatus("Error", false);
-  ws.onclose   = () => { setStatus("Disconnected", false); ws = null; };
+  ws.onerror   = () => setStatus("Connection error", false);
+  ws.onclose   = () => { ws = null; };
 }
 
 function send(payload) {
   if (ws && ws.readyState === WebSocket.OPEN) ws.send(JSON.stringify(payload));
 }
 
+// ── Speech Recognition ───────────────────────────────────────────────────
+
+function buildRecognition() {
+  const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
+  if (!SR) return null;
+
+  const r = new SR();
+  r.continuous      = true;
+  r.interimResults  = false;
+  r.lang            = "en-US";
+
+  r.onresult = (event) => {
+    for (let i = event.resultIndex; i < event.results.length; i++) {
+      if (event.results[i].isFinal) {
+        const text      = event.results[i][0].transcript.trim();
+        const timestamp = new Date().toLocaleTimeString("en-US", { hour12: false });
+        if (text) {
+          appendTranscript(timestamp, text);
+          send({ action: "transcript", timestamp, text });
+        }
+      }
+    }
+  };
+
+  r.onerror = (e) => {
+    if (e.error === "no-speech") return; // ignore silence gaps
+    setStatus("Mic error: " + e.error, false);
+  };
+
+  // Auto-restart on end so long lectures aren't cut off
+  r.onend = () => {
+    if (isRecording) r.start();
+  };
+
+  return r;
+}
+
 // ── Controls ─────────────────────────────────────────────────────────────
 
 btnStart.addEventListener("click", () => {
+  if (!("SpeechRecognition" in window || "webkitSpeechRecognition" in window)) {
+    alert("Speech recognition requires Chrome or Edge. Please switch browsers.");
+    return;
+  }
+
   btnStart.disabled = true;
   btnStop.disabled  = false;
-  setStatus("Connecting…", false);
+  isRecording       = true;
   document.querySelectorAll(".empty").forEach(el => el.remove());
+  setStatus("Connecting…", false);
+
+  recognition = buildRecognition();
 
   const startRecording = () => {
     send({ action: "start" });
+    recognition.start();
     setStatus("Recording…", true);
   };
 
@@ -94,6 +136,8 @@ btnStart.addEventListener("click", () => {
 });
 
 btnStop.addEventListener("click", () => {
+  isRecording = false;
+  if (recognition) { recognition.stop(); recognition = null; }
   send({ action: "stop" });
   btnStart.disabled = false;
   btnStop.disabled  = true;
@@ -139,7 +183,7 @@ document.getElementById("btn-export-transcript").addEventListener("click", () =>
 
 document.getElementById("btn-export-notes").addEventListener("click", async () => {
   try {
-    const res  = await fetch("http://localhost:8000/notes");
+    const res  = await fetch("/notes");
     const data = await res.json();
     download("lecture_notes.md", data.notes, "text/markdown");
   } catch {
@@ -162,7 +206,7 @@ document.getElementById("btn-save-drive").addEventListener("click", async (e) =>
   btn.textContent = "Saving…";
   try {
     const content = await getNotesContent();
-    if (!content) { alert("No notes to save yet."); return; }
+    if (!content) { alert("No notes to save yet."); btn.innerHTML = orig; btn.disabled = false; return; }
     const res  = await fetch("/drive/save", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
