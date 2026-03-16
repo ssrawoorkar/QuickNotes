@@ -1,0 +1,133 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Home · QuickNotes</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="/static/home.css" />
+  <link rel="stylesheet" href="/static/page.css" />
+  <link rel="stylesheet" href="/static/dashboard.css" />
+</head>
+<body class="page-body">
+
+  <nav>
+    <div class="nav-inner">
+      <a class="nav-logo" href="/home">
+        <svg width="22" height="22" viewBox="0 0 22 22" fill="none">
+          <rect width="22" height="22" rx="6" fill="#6EC1FF"/>
+          <path d="M6 7h10M6 11h10M6 15h6" stroke="#fff" stroke-width="1.8" stroke-linecap="round"/>
+        </svg>
+        QuickNotes
+      </a>
+      <div></div>
+      <div class="nav-profile" id="nav-profile">
+        <button class="profile-trigger" id="profile-trigger" aria-haspopup="true" aria-expanded="false">
+          <img class="profile-avatar" id="profile-avatar" src="" alt="User avatar" />
+          <span class="profile-name" id="profile-name"></span>
+          <svg class="profile-chevron" width="14" height="14" viewBox="0 0 14 14" fill="none">
+            <path d="M3 5l4 4 4-4" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/>
+          </svg>
+        </button>
+        <div class="profile-dropdown" id="profile-dropdown" aria-hidden="true">
+          <a class="dropdown-item" href="/profile">
+            <svg width="15" height="15" viewBox="0 0 15 15" fill="none"><circle cx="7.5" cy="5" r="2.5" stroke="currentColor" stroke-width="1.4"/><path d="M2.5 13c0-2.76 2.24-5 5-5s5 2.24 5 5" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/></svg>
+            Your Profile
+          </a>
+          <a class="dropdown-item" href="/settings">
+            <svg width="15" height="15" viewBox="0 0 15 15" fill="none"><circle cx="7.5" cy="7.5" r="2" stroke="currentColor" stroke-width="1.4"/><path d="M7.5 1v1.5M7.5 12.5V14M1 7.5h1.5M12.5 7.5H14M2.93 2.93l1.06 1.06M11.01 11.01l1.06 1.06M2.93 12.07l1.06-1.06M11.01 3.99l1.06-1.06" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/></svg>
+            Settings
+          </a>
+          <div class="dropdown-divider"></div>
+          <a class="dropdown-item dropdown-item-danger" href="/auth/logout">
+            <svg width="15" height="15" viewBox="0 0 15 15" fill="none"><path d="M6 2H3a1 1 0 0 0-1 1v9a1 1 0 0 0 1 1h3M10 10l3-3-3-3M13 7.5H6" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"/></svg>
+            Sign Out
+          </a>
+        </div>
+      </div>
+    </div>
+  </nav>
+
+  <main class="page-main">
+    <div class="page-container dash-container">
+
+      <!-- Welcome -->
+      <div class="dash-welcome">
+        <div>
+          <h1 class="dash-greeting" id="dash-greeting">Good morning</h1>
+          <p class="dash-subgreeting">Ready to take some notes?</p>
+        </div>
+        <a href="/session" class="btn-new-session">
+          <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+            <circle cx="8" cy="8" r="6" fill="white" opacity="0.25"/>
+            <circle cx="8" cy="8" r="3" fill="white"/>
+          </svg>
+          New Session
+        </a>
+      </div>
+
+      <!-- Quick actions -->
+      <div class="dash-actions">
+        <a href="/session" class="action-card action-primary">
+          <div class="action-icon">
+            <svg width="22" height="22" viewBox="0 0 22 22" fill="none">
+              <circle cx="11" cy="11" r="8" stroke="currentColor" stroke-width="1.8"/>
+              <circle cx="11" cy="11" r="4" fill="currentColor"/>
+            </svg>
+          </div>
+          <div>
+            <div class="action-title">Start Recording</div>
+            <div class="action-desc">Transcribe and take notes live</div>
+          </div>
+        </a>
+        <a href="/profile" class="action-card">
+          <div class="action-icon">
+            <svg width="22" height="22" viewBox="0 0 22 22" fill="none">
+              <circle cx="11" cy="8" r="3.5" stroke="currentColor" stroke-width="1.8"/>
+              <path d="M4 19c0-3.866 3.134-7 7-7h0c3.866 0 7 3.134 7 7" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>
+            </svg>
+          </div>
+          <div>
+            <div class="action-title">Your Profile</div>
+            <div class="action-desc">View account info and stats</div>
+          </div>
+        </a>
+        <a href="/settings" class="action-card">
+          <div class="action-icon">
+            <svg width="22" height="22" viewBox="0 0 22 22" fill="none">
+              <circle cx="11" cy="11" r="3" stroke="currentColor" stroke-width="1.8"/>
+              <path d="M11 2v2M11 18v2M2 11h2M18 11h2M4.22 4.22l1.42 1.42M16.36 16.36l1.42 1.42M4.22 17.78l1.42-1.42M16.36 5.64l1.42-1.42" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>
+            </svg>
+          </div>
+          <div>
+            <div class="action-title">Settings</div>
+            <div class="action-desc">Customize your experience</div>
+          </div>
+        </a>
+      </div>
+
+      <!-- Recent sessions -->
+      <div class="section-label" style="margin-top: 8px;">Recent Sessions</div>
+      <div class="section-card">
+        <div class="empty-sessions">
+          <svg width="40" height="40" viewBox="0 0 40 40" fill="none">
+            <rect width="40" height="40" rx="10" fill="#EDF6FF"/>
+            <path d="M12 14h16M12 20h16M12 26h10" stroke="#6EC1FF" stroke-width="2" stroke-linecap="round"/>
+          </svg>
+          <p>No sessions yet</p>
+          <span>Start your first recording to see it here</span>
+          <a href="/session" class="btn-start-first">Start your first session →</a>
+        </div>
+      </div>
+
+    </div>
+  </main>
+
+  <footer>QuickNotes · AI-powered lecture notes</footer>
+
+  <script src="/static/page.js"></script>
+  <script src="/static/dashboard.js"></script>
+</body>
+</html>

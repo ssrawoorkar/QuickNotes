@@ -1,0 +1,84 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>QuickNotes — AI-Powered Lecture Notes</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="/static/landing.css" />
+</head>
+<body>
+
+  <!-- Nav -->
+  <nav class="landing-nav">
+    <div class="landing-nav-inner">
+      <a class="landing-logo" href="/">
+        <svg width="24" height="24" viewBox="0 0 22 22" fill="none">
+          <rect width="22" height="22" rx="6" fill="#6EC1FF"/>
+          <path d="M6 7h10M6 11h10M6 15h6" stroke="#fff" stroke-width="1.8" stroke-linecap="round"/>
+        </svg>
+        QuickNotes
+      </a>
+      <a class="btn-nav-signin" href="/login">Sign In</a>
+    </div>
+  </nav>
+
+  <!-- Hero -->
+  <section class="hero">
+    <div class="hero-inner">
+      <div class="hero-badge">AI-Powered Note Taking</div>
+      <h1 class="hero-heading">Never Miss a Word.</h1>
+      <p class="hero-sub">
+        QuickNotes listens to your lectures, transcribes in real time, and generates clean notes
+        automatically — so you can just pay attention.
+      </p>
+      <div class="hero-cta">
+        <a class="btn-primary" href="/login">Get Started Free</a>
+        <a class="btn-secondary" href="#features">See How It Works</a>
+      </div>
+    </div>
+  </section>
+
+  <!-- Features -->
+  <section class="features" id="features">
+    <div class="features-inner">
+      <h2 class="section-title">Everything you need to study smarter</h2>
+      <div class="feature-cards">
+
+        <div class="feature-card">
+          <div class="feature-icon">🎙️</div>
+          <h3 class="feature-title">Live Transcription</h3>
+          <p class="feature-desc">
+            Captures every word from your microphone in real time using Whisper AI.
+          </p>
+        </div>
+
+        <div class="feature-card">
+          <div class="feature-icon">📝</div>
+          <h3 class="feature-title">Smart Notes</h3>
+          <p class="feature-desc">
+            Claude AI turns your transcript into structured, readable notes every 45 seconds.
+          </p>
+        </div>
+
+        <div class="feature-card">
+          <div class="feature-icon">📤</div>
+          <h3 class="feature-title">Export Anywhere</h3>
+          <p class="feature-desc">
+            Download your transcript as .txt or notes as .md with one click.
+          </p>
+        </div>
+
+      </div>
+    </div>
+  </section>
+
+  <!-- Footer -->
+  <footer class="landing-footer">
+    QuickNotes · AI-powered lecture notes
+  </footer>
+
+</body>
+</html>

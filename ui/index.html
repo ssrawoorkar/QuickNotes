@@ -1,0 +1,84 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>QuickNotes</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="/static/styles.css" />
+</head>
+<body>
+
+  <!-- Nav -->
+  <nav>
+    <div class="nav-inner">
+      <div class="nav-logo">
+        <svg width="22" height="22" viewBox="0 0 22 22" fill="none">
+          <rect width="22" height="22" rx="6" fill="#6EC1FF"/>
+          <path d="M6 7h10M6 11h10M6 15h6" stroke="#fff" stroke-width="1.8" stroke-linecap="round"/>
+        </svg>
+        QuickNotes
+      </div>
+      <div class="nav-status">
+        <span id="status-dot"></span>
+        <span id="status">Idle</span>
+      </div>
+    </div>
+  </nav>
+
+  <!-- Recording controls -->
+  <div class="record-bar">
+    <div class="record-bar-inner">
+      <button id="btn-start">
+        <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
+          <circle cx="7" cy="7" r="5" fill="white" opacity="0.9"/>
+          <circle cx="7" cy="7" r="3" fill="white"/>
+        </svg>
+        Start Recording
+      </button>
+      <button id="btn-stop" disabled>
+        <svg width="12" height="12" viewBox="0 0 12 12" fill="none">
+          <rect x="2" y="2" width="8" height="8" rx="1.5" fill="currentColor"/>
+        </svg>
+        Stop
+      </button>
+    </div>
+  </div>
+
+  <!-- Panels -->
+  <main>
+    <div class="workspace">
+
+      <div class="card">
+        <div class="card-header">
+          <span class="card-title">Live Transcript</span>
+          <button id="btn-export-transcript" class="btn-ghost">Export .txt</button>
+        </div>
+        <div class="card-body" id="transcript-output">
+          <p class="empty">Transcript will appear here once recording starts…</p>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card-header">
+          <span class="card-title">AI Generated Notes</span>
+          <button id="btn-export-notes" class="btn-ghost">Export .md</button>
+        </div>
+        <div class="card-body" id="notes-output">
+          <p class="empty">AI-generated notes will appear here automatically…</p>
+        </div>
+      </div>
+
+    </div>
+  </main>
+
+  <!-- Footer -->
+  <footer>
+    QuickNotes · AI-powered lecture notes
+  </footer>
+
+  <script src="/static/app.js?v=2"></script>
+</body>
+</html>

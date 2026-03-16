@@ -1,0 +1,19 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(pip install:*)",
+      "Bash(python3:*)",
+      "Bash(venv/bin/uvicorn api.server:app --reload 2>&1)",
+      "Bash(sleep:*)",
+      "Bash(curl:*)",
+      "Bash(venv/bin/python -c \"from api.routes import router; print\\(router.routes\\)\")",
+      "Bash(venv/bin/python -c \"\nimport asyncio, websockets, json\n\nasync def test\\(\\):\n    try:\n        async with websockets.connect\\('ws://localhost:8000/ws'\\) as ws:\n            print\\('Connected!'\\)\n            await ws.send\\(json.dumps\\({'action': 'start'}\\)\\)\n            print\\('Sent start'\\)\n            await asyncio.sleep\\(1\\)\n    except Exception as e:\n        print\\(f'Error: {e}'\\)\n\nasyncio.run\\(test\\(\\)\\)\n\")",
+      "Bash(venv/bin/python -c \"\nimport sounddevice as sd\nprint\\('Default input device:', sd.query_devices\\(kind='input'\\)['name']\\)\n\")",
+      "Bash(venv/bin/python -c \"\nimport sounddevice as sd, numpy as np\nprint\\('Recording 2s...'\\)\naudio = sd.rec\\(2*16000, samplerate=16000, channels=1, dtype='float32'\\)\nsd.wait\\(\\)\nprint\\(f'Done. Shape={audio.shape}, max={np.abs\\(audio\\).max\\(\\):.4f}'\\)\n\")",
+      "Bash(venv/bin/python -c \"\nfrom app.transcription.whisper_engine import WhisperEngine\nimport numpy as np\nprint\\('Loading Whisper...'\\)\nw = WhisperEngine\\(\\)\nprint\\('Whisper loaded, testing transcription...'\\)\nsilence = np.zeros\\(16000*3, dtype='float32'\\)\nresult = w.transcribe\\(silence\\)\nprint\\('Result on silence:', result\\)\n\")",
+      "Bash(pkill:*)",
+      "Bash(venv/bin/python -c \"from api.server import app; print\\('Server imports OK'\\)\" 2>&1)",
+      "Bash(venv/bin/python -c \"from api.server import app; print\\('OK'\\)\" 2>&1)"
+    ]
+  }
+}
