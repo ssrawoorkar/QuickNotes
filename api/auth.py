@@ -3,6 +3,7 @@
 import logging
 import os
 import secrets
+from urllib.parse import urlencode
 
 import httpx
 from fastapi import APIRouter, Request
@@ -72,8 +73,7 @@ async def google_login(request: Request):
         "access_type":   "offline",   # request refresh token
         "prompt":        "consent",   # always show consent so refresh token is returned
     }
-    query = "&".join(f"{k}={v}" for k, v in params.items())
-    redirect_url = f"{GOOGLE_AUTH_URL}?{query}"
+    redirect_url = f"{GOOGLE_AUTH_URL}?{urlencode(params)}"
 
     response = RedirectResponse(url=redirect_url)
     # CSRF protection: store state in a short-lived cookie
