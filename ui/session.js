@@ -14,9 +14,12 @@ const profileName      = document.getElementById("profile-name");
 const profileTrigger   = document.getElementById("profile-trigger");
 const profileDropdown  = document.getElementById("profile-dropdown");
 
-let ws          = null;
-let recognition = null;
-let isRecording = false;
+let ws              = null;
+let recognition     = null;
+let isRecording     = false;
+let restartTimer    = null;
+
+const RESTART_INTERVAL = 25000; // restart every 25s before Chrome's ~60s hard limit
 
 // ── Auth: load current user ──────────────────────────────────────────────
 
@@ -110,12 +113,23 @@ function buildRecognition() {
 
   // Auto-restart whenever recognition ends while still recording
   r.onend = () => {
+    clearTimeout(restartTimer);
     if (isRecording) {
-      try { r.start(); } catch (_) {}
+      try {
+        r.start();
+        scheduleRestart(r);
+      } catch (_) {}
     }
   };
 
   return r;
+}
+
+function scheduleRestart(r) {
+  clearTimeout(restartTimer);
+  restartTimer = setTimeout(() => {
+    if (isRecording) r.stop(); // graceful stop → onend fires → restarts
+  }, RESTART_INTERVAL);
 }
 
 // ── Controls ─────────────────────────────────────────────────────────────
@@ -137,6 +151,7 @@ btnStart.addEventListener("click", () => {
   const startRecording = () => {
     send({ action: "start" });
     recognition.start();
+    scheduleRestart(recognition);
     setStatus("Recording…", true);
   };
 
@@ -149,6 +164,7 @@ btnStart.addEventListener("click", () => {
 
 btnStop.addEventListener("click", () => {
   isRecording = false;
+  clearTimeout(restartTimer);
   if (recognition) { recognition.stop(); recognition = null; }
   send({ action: "stop" });
   btnStart.disabled = false;
