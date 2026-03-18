@@ -8,6 +8,9 @@ import Home     from './pages/Home.jsx'
 import Session  from './pages/Session.jsx'
 import Settings from './pages/Settings.jsx'
 import Profile  from './pages/Profile.jsx'
+import Notes    from './pages/Notes.jsx'
+import Quiz     from './pages/Quiz.jsx'
+import About    from './pages/About.jsx'
 
 /**
  * Protected route wrapper.
@@ -29,6 +32,9 @@ export default function App() {
       <Route path="/session"  element={<ProtectedRoute><Session /></ProtectedRoute>} />
       <Route path="/settings" element={<ProtectedRoute><Settings /></ProtectedRoute>} />
       <Route path="/profile"  element={<ProtectedRoute><Profile /></ProtectedRoute>} />
+      <Route path="/notes"    element={<ProtectedRoute><Notes /></ProtectedRoute>} />
+      <Route path="/quiz"     element={<ProtectedRoute><Quiz /></ProtectedRoute>} />
+      <Route path="/about"    element={<About />} />
       {/* Catch-all → landing */}
       <Route path="*" element={<Navigate to="/" replace />} />
     </Routes>

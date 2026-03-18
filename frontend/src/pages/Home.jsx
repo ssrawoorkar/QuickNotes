@@ -4,9 +4,9 @@ import { Nav } from '../components/Nav.jsx'
 import { useAuth } from '../hooks/useAuth.js'
 
 const tips = [
-  { icon: '🎙', title: 'Start anywhere', body: 'Open a session and hit record. QuickNotes works in any browser that supports microphone access.' },
-  { icon: '✦', title: 'Let AI summarize', body: 'Notes are generated automatically every minute. The longer you record, the richer the notes become.' },
-  { icon: '⬇', title: 'Export anytime', body: 'Download your transcript as .txt or notes as .md. Save directly to Google Drive or open in Docs.' },
+  { icon: '🎙', title: 'Start anywhere', body: 'Open a session and hit record. QuickNotes works in any browser that supports microphone access.', to: '/notes' },
+  { icon: '✦', title: 'Let AI summarize', body: 'Notes are generated automatically every minute. The longer you record, the richer the notes become.', to: '/quiz' },
+  { icon: '⬇', title: 'Export anytime', body: 'Download your transcript as .txt or notes as .md. Save directly to Google Drive or open in Docs.', to: '/about' },
 ]
 
 export default function Home() {
@@ -92,32 +92,53 @@ export default function Home() {
           </p>
           <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
             {tips.map((tip, i) => (
-              <div
-                key={i}
-                style={{
-                  display:      'flex',
-                  alignItems:   'flex-start',
-                  gap:          '16px',
-                  padding:      '18px 20px',
-                  background:   'var(--bg-card)',
-                  border:       '1px solid var(--border)',
-                  borderRadius: '12px',
-                  opacity:      visible ? 1 : 0,
-                  transform:    visible ? 'translateY(0)' : 'translateY(10px)',
-                  transition:   `opacity 0.4s ease ${0.1 + i * 0.08}s, transform 0.4s ease ${0.1 + i * 0.08}s`,
-                }}
-              >
-                <span style={{ fontSize: '18px', lineHeight: 1, marginTop: 1 }}>{tip.icon}</span>
-                <div>
-                  <div style={{ fontSize: '14px', fontWeight: 600, color: 'var(--text)', marginBottom: 3 }}>{tip.title}</div>
-                  <div style={{ fontSize: '13px', color: 'var(--text-muted)', lineHeight: 1.6 }}>{tip.body}</div>
-                </div>
-              </div>
+              <TipCard key={i} tip={tip} i={i} visible={visible} />
             ))}
           </div>
         </div>
       </main>
     </div>
+  )
+}
+
+function TipCard({ tip, i, visible }) {
+  const [hovered, setHovered] = React.useState(false)
+  return (
+    <Link
+      to={tip.to}
+      style={{
+        display:        'flex',
+        alignItems:     'flex-start',
+        gap:            '16px',
+        padding:        '18px 20px',
+        background:     'var(--bg-card)',
+        border:         `1px solid ${hovered ? 'var(--accent)' : 'var(--border)'}`,
+        borderRadius:   '12px',
+        opacity:        visible ? 1 : 0,
+        transform:      visible ? (hovered ? 'translateY(-2px)' : 'translateY(0)') : 'translateY(10px)',
+        transition:     `opacity 0.4s ease ${0.1 + i * 0.08}s, transform 0.4s ease ${0.1 + i * 0.08}s, border-color 0.15s ease, box-shadow 0.15s ease`,
+        cursor:         'pointer',
+        textDecoration: 'none',
+        boxShadow:      hovered ? '0 4px 16px rgba(110,193,255,0.1)' : 'none',
+      }}
+      onMouseEnter={() => setHovered(true)}
+      onMouseLeave={() => setHovered(false)}
+    >
+      <span style={{ fontSize: '18px', lineHeight: 1, marginTop: 1 }}>{tip.icon}</span>
+      <div style={{ flex: 1 }}>
+        <div style={{ fontSize: '14px', fontWeight: 600, color: 'var(--text)', marginBottom: 3 }}>{tip.title}</div>
+        <div style={{ fontSize: '13px', color: 'var(--text-muted)', lineHeight: 1.6 }}>{tip.body}</div>
+      </div>
+      <span style={{
+        fontSize:   '16px',
+        color:      'var(--accent)',
+        opacity:    hovered ? 1 : 0,
+        transform:  hovered ? 'translateX(0)' : 'translateX(-4px)',
+        transition: 'opacity 0.15s ease, transform 0.15s ease',
+        alignSelf:  'center',
+        flexShrink: 0,
+      }}>→</span>
+    </Link>
   )
 }
 
