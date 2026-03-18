@@ -254,6 +254,27 @@ btnStop.addEventListener("click", () => {
   setStatus("Stopped", false);
 });
 
+document.getElementById("btn-new-session").addEventListener("click", () => {
+  // Stop any active recording first
+  if (isRecording) {
+    isRecording = false;
+    stopMic();
+    send({ action: "stop" });
+    btnStart.disabled = false;
+    btnStop.disabled  = true;
+  }
+
+  // Clear both panels
+  transcriptOutput.innerHTML = "<p class=\"empty\">Transcript will appear here once recording starts…</p>";
+  notesOutput.innerHTML      = "<p class=\"empty\">AI-generated notes will appear here automatically…</p>";
+
+  // Tell the server to reset its stores
+  send({ action: "start" });
+  send({ action: "stop" });
+
+  setStatus("Idle", false);
+});
+
 // ── Transcript ───────────────────────────────────────────────────────────
 
 function appendTranscript(timestamp, text) {
