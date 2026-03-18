@@ -23,7 +23,7 @@ let isRecording    = false;
 let recordingStart = 0;
 
 const SILENCE_THRESHOLD  = 0.015; // RMS below this = silence
-const SILENCE_DURATION   = 600;   // ms of continuous silence before splitting
+const SILENCE_DURATION   = 300;   // ms of continuous silence before splitting
 const MIN_CHUNK_MS       = 1000;  // never split before 1 s of audio
 const MAX_CHUNK_MS       = 45000; // hard cap — split even if no pause
 
@@ -183,10 +183,11 @@ async function transcribeChunk(blob, mimeType) {
   try {
     const res  = await fetch("/transcribe", { method: "POST", body: formData });
     const data = await res.json();
-    if (data.text && data.text.trim()) {
+    const text = data.text && data.text.trim();
+    if (text && text.split(/\s+/).length >= 4) {
       const elapsed = elapsedLabel();
-      appendTranscript(elapsed, data.text.trim());
-      send({ action: "transcript", timestamp: elapsed, text: data.text.trim() });
+      appendTranscript(elapsed, text);
+      send({ action: "transcript", timestamp: elapsed, text });
     }
   } catch (err) {
     console.error("Transcription error:", err);
