@@ -4,9 +4,9 @@
   --bg-elevated: #2E2825;
   --border: #3D3533;
   --border-strong: #554F4C;
-  --accent: #D97757;
-  --accent-hover: #E08866;
-  --accent-dim: rgba(217, 119, 87, 0.12);
+  --accent: #6EC1FF;
+  --accent-hover: #4AADF5;
+  --accent-dim: rgba(110, 193, 255, 0.12);
   --text: #FAF9F7;
   --text-mid: #C4B8AD;
   --text-muted: #8C7D73;
@@ -31,7 +31,7 @@
   --text-mid:     #4A3F38;
   --text-muted:   #8C7D73;
   --red-dim:      rgba(224, 92, 92, 0.08);
-  --accent-dim:   rgba(217, 119, 87, 0.10);
+  --accent-dim:   rgba(110, 193, 255, 0.10);
 }
 
 *, *::before, *::after {
@@ -113,7 +113,7 @@ input, select, textarea {
 .btn-primary:hover {
   background: var(--accent-hover);
   transform: translateY(-1px);
-  box-shadow: 0 4px 16px rgba(217, 119, 87, 0.3);
+  box-shadow: 0 4px 16px rgba(110, 193, 255, 0.3);
 }
 
 .btn-secondary {
