@@ -14,14 +14,10 @@ const profileName      = document.getElementById("profile-name");
 const profileTrigger   = document.getElementById("profile-trigger");
 const profileDropdown  = document.getElementById("profile-dropdown");
 
-let ws               = null;
-let recognition      = null;
-let isRecording      = false;
-let restartTimer     = null;
-let recognitionId    = 0;       // incremented on each new instance to suppress stale onend
-let recordingStart   = 0;       // Date.now() when recording began
-
-const RESTART_INTERVAL = 10000; // swap instances every 10s
+let ws             = null;
+let recognition    = null;
+let isRecording    = false;
+let recordingStart = 0;
 
 // ── Auth: load current user ──────────────────────────────────────────────
 
@@ -66,8 +62,8 @@ function connect(onOpen) {
     const msg = JSON.parse(e.data);
     if (msg.type === "notes") renderNotes(msg.text);
   };
-  ws.onerror   = () => setStatus("Connection error", false);
-  ws.onclose   = () => { ws = null; };
+  ws.onerror = () => setStatus("Connection error", false);
+  ws.onclose = () => { ws = null; };
 }
 
 function send(payload) {
@@ -76,12 +72,12 @@ function send(payload) {
 
 // ── Speech Recognition ───────────────────────────────────────────────────
 
-function buildRecognition(id) {
+function createRecognition() {
   const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
   if (!SR) return null;
 
   const r = new SR();
-  r.continuous     = true;
+  r.continuous     = false; // one utterance at a time — Chrome finalizes naturally
   r.interimResults = true;
   r.lang           = "en-US";
 
@@ -89,16 +85,12 @@ function buildRecognition(id) {
     let interimText = "";
     for (let i = event.resultIndex; i < event.results.length; i++) {
       if (event.results[i].isFinal) {
-        const raw = event.results[i][0].transcript.trim();
-        const sentences = raw.match(/[^.!?]+[.!?]*/g) || [raw];
-        sentences.forEach(sentence => {
-          const text = sentence.trim();
-          if (!text) return;
-          const elapsed = elapsedLabel();
+        const text = event.results[i][0].transcript.trim();
+        if (text) {
           removeInterimLine();
-          appendTranscript(elapsed, text);
-          send({ action: "transcript", timestamp: elapsed, text });
-        });
+          appendTranscript(elapsedLabel(), text);
+          send({ action: "transcript", timestamp: elapsedLabel(), text });
+        }
       } else {
         interimText += event.results[i][0].transcript;
       }
@@ -111,14 +103,18 @@ function buildRecognition(id) {
     setStatus("Mic error: " + e.error, false);
   };
 
-  // Only restart if this instance is still the active one
+  // Restart immediately after each utterance so mic stays on
   r.onend = () => {
-    if (isRecording && id === recognitionId) {
-      swapRecognition();
-    }
+    removeInterimLine();
+    if (isRecording) startListening();
   };
 
   return r;
+}
+
+function startListening() {
+  if (!recognition) recognition = createRecognition();
+  try { recognition.start(); } catch (_) {}
 }
 
 function elapsedLabel() {
@@ -126,40 +122,6 @@ function elapsedLabel() {
   if (secs < 60) return `${secs}s`;
   const m = Math.floor(secs / 60), s = secs % 60;
   return `${m}m ${s}s`;
-}
-
-function swapRecognition() {
-  const oldRec = recognition;
-
-  // Commit any pending interim text before releasing the mic
-  const interimEl = document.getElementById("interim-line");
-  if (interimEl) {
-    const text = interimEl.textContent.trim();
-    if (text) {
-      removeInterimLine();
-      const elapsed = elapsedLabel();
-      appendTranscript(elapsed, text);
-      send({ action: "transcript", timestamp: elapsed, text });
-    }
-  }
-
-  // Abort old instance to release mic immediately
-  if (oldRec) try { oldRec.abort(); } catch (_) {}
-
-  // Start fresh instance
-  recognitionId++;
-  recognition = buildRecognition(recognitionId);
-  if (recognition) {
-    try { recognition.start(); } catch (_) {}
-    scheduleRestart();
-  }
-}
-
-function scheduleRestart() {
-  clearTimeout(restartTimer);
-  restartTimer = setTimeout(() => {
-    if (isRecording) swapRecognition();
-  }, RESTART_INTERVAL);
 }
 
 // ── Controls ─────────────────────────────────────────────────────────────
@@ -177,13 +139,11 @@ btnStart.addEventListener("click", () => {
   document.querySelectorAll(".empty").forEach(el => el.remove());
   setStatus("Connecting…", false);
 
-  recognitionId++;
-  recognition = buildRecognition(recognitionId);
+  recognition = createRecognition();
 
   const startRecording = () => {
     send({ action: "start" });
-    recognition.start();
-    scheduleRestart();
+    startListening();
     setStatus("Recording…", true);
   };
 
@@ -196,8 +156,11 @@ btnStart.addEventListener("click", () => {
 
 btnStop.addEventListener("click", () => {
   isRecording = false;
-  clearTimeout(restartTimer);
-  if (recognition) { recognition.stop(); recognition = null; }
+  if (recognition) {
+    try { recognition.abort(); } catch (_) {}
+    recognition = null;
+  }
+  removeInterimLine();
   send({ action: "stop" });
   btnStart.disabled = false;
   btnStop.disabled  = true;
@@ -219,8 +182,8 @@ function showInterimLine(text) {
 }
 
 function removeInterimLine() {
-  const interim = document.getElementById("interim-line");
-  if (interim) interim.remove();
+  const el = document.getElementById("interim-line");
+  if (el) el.remove();
 }
 
 function appendTranscript(timestamp, text) {
