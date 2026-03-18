@@ -8,7 +8,7 @@ from openai import OpenAI
 logger = logging.getLogger(__name__)
 
 SUMMARIZE_INTERVAL = 45
-MODEL              = "gpt-4o-mini"
+MODEL              = "gpt-4.1-mini"
 
 PROMPT_FIRST = """\
 You are a note-taking assistant. Summarize the speech below into clean, concise notes.
