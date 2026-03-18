@@ -115,9 +115,11 @@ async def generate_quiz(request: Request):
     if not api_key:
         return JSONResponse({"error": "OPENAI_API_KEY not set"}, status_code=500)
 
-    prompt = """You are a quiz generator for students. Given the study notes below, generate exactly 20 multiple choice questions that test understanding of the material.
+    prompt = """You are a quiz generator for students. The notes below may follow a structured format with sections like CORE INSIGHT, KEY PILLARS, DETAILS, SO WHAT, OPEN QUESTIONS, and ACTION ITEMS — extract the key concepts, facts, and insights from all sections to build your questions.
 
-Return ONLY a valid JSON array with exactly 20 objects. Each object must have:
+Generate exactly 20 multiple choice questions that test deep understanding of the material, not just surface recall. Prioritise the CORE INSIGHT and KEY PILLARS sections when deciding what to test, and use DETAILS and SO WHAT for supporting context.
+
+Return ONLY a valid JSON object with a "questions" key containing an array of exactly 20 objects. Each object must have:
 - "question": the question string
 - "choices": object with keys "A", "B", "C", "D" each being a string answer option
 - "correct": the correct answer letter ("A", "B", "C", or "D")
