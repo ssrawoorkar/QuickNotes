@@ -137,7 +137,8 @@ function swapRecognition() {
     try { recognition.start(); } catch (_) {}
     scheduleRestart();
   }
-  if (oldRec) try { oldRec.abort(); } catch (_) {}
+  // stop() (not abort()) so old instance finalizes and commits its audio
+  if (oldRec) try { oldRec.stop(); } catch (_) {}
 }
 
 function scheduleRestart() {
