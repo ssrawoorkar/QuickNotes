@@ -59,6 +59,8 @@ nav {
   color: var(--text);
   letter-spacing: -0.2px;
   justify-self: start;
+  text-decoration: none;
+  cursor: pointer;
 }
 
 /* ─── Nav Controls (center) ───────────────────────────────── */
