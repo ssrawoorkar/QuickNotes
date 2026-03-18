@@ -1,4 +1,4 @@
-import { useState, useCallback } from 'react'
+import { useState, useCallback, useEffect } from 'react'
 
 const STORAGE_KEY = 'qn_settings'
 
@@ -7,6 +7,7 @@ const DEFAULTS = {
   summarizeInterval:  '45',
   rollingWindow:      '150',
   summarizeOnStop:    true,
+  theme:              'dark',
 }
 
 /**
@@ -42,4 +43,20 @@ export function useSettings() {
   }, [settings])
 
   return { settings, update, save }
+}
+
+/**
+ * Reads theme from localStorage and stamps data-theme on <html>.
+ * Call once at the app root so every page respects the saved theme.
+ */
+export function useTheme() {
+  useEffect(() => {
+    try {
+      const stored = localStorage.getItem('qn_settings')
+      const theme = stored ? (JSON.parse(stored).theme || 'dark') : 'dark'
+      document.documentElement.setAttribute('data-theme', theme)
+    } catch {
+      document.documentElement.setAttribute('data-theme', 'dark')
+    }
+  }, [])
 }

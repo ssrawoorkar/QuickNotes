@@ -20,6 +20,20 @@
   --font-mono: 'JetBrains Mono', monospace;
 }
 
+/* Light mode overrides */
+[data-theme="light"] {
+  --bg:           #FAF9F7;
+  --bg-card:      #F2F0EC;
+  --bg-elevated:  #E8E4DE;
+  --border:       #D9D4CC;
+  --border-strong:#C4BDB4;
+  --text:         #1C1917;
+  --text-mid:     #4A3F38;
+  --text-muted:   #8C7D73;
+  --red-dim:      rgba(224, 92, 92, 0.08);
+  --accent-dim:   rgba(217, 119, 87, 0.10);
+}
+
 *, *::before, *::after {
   box-sizing: border-box;
   margin: 0;

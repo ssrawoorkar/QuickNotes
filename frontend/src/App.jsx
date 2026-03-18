@@ -1,5 +1,6 @@
 import React, { Suspense } from 'react'
 import { Routes, Route, Navigate } from 'react-router-dom'
+import { useTheme } from './hooks/useSettings.js'
 
 import Landing  from './pages/Landing.jsx'
 import Login    from './pages/Login.jsx'
@@ -19,6 +20,7 @@ function ProtectedRoute({ children }) {
 }
 
 export default function App() {
+  useTheme()
   return (
     <Routes>
       <Route path="/"         element={<Landing />} />

@@ -50,6 +50,22 @@ export default function Settings() {
           Configure how QuickNotes captures and summarizes your lectures.
         </p>
 
+        {/* Appearance section */}
+        <Section title="Appearance">
+          <SettingRow
+            label="Theme"
+            description="Choose between dark and light mode."
+          >
+            <ThemeToggle
+              value={settings.theme || 'dark'}
+              onChange={v => {
+                update({ theme: v })
+                document.documentElement.setAttribute('data-theme', v)
+              }}
+            />
+          </SettingRow>
+        </Section>
+
         {/* Transcription section */}
         <Section title="Transcription">
           <SettingRow
@@ -302,6 +318,33 @@ function Toggle({ value, onChange }) {
         boxShadow:  '0 1px 3px rgba(0,0,0,0.3)',
       }} />
     </button>
+  )
+}
+
+function ThemeToggle({ value, onChange }) {
+  const isDark = value === 'dark'
+  return (
+    <div style={{ display: 'flex', gap: 6 }}>
+      {['light', 'dark'].map(t => (
+        <button
+          key={t}
+          onClick={() => onChange(t)}
+          style={{
+            padding:      '6px 14px',
+            borderRadius: 'var(--radius)',
+            fontSize:     '13px',
+            fontWeight:   500,
+            cursor:       'pointer',
+            transition:   'all 0.15s',
+            background:   value === t ? 'var(--accent)' : 'var(--bg-elevated)',
+            color:        value === t ? '#fff' : 'var(--text-muted)',
+            border:       value === t ? '1px solid var(--accent)' : '1px solid var(--border)',
+          }}
+        >
+          {t === 'light' ? '☀ Light' : '☾ Dark'}
+        </button>
+      ))}
+    </div>
   )
 }
 
