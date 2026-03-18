@@ -123,6 +123,20 @@
   border-color: var(--accent);
 }
 
+/* ─── Static info badge (e.g. whisper-1) ─────────────────── */
+.setting-badge {
+  flex-shrink: 0;
+  padding: 6px 14px;
+  background: var(--bg-secondary);
+  border: 1.5px solid var(--border);
+  border-radius: 8px;
+  font-size: 0.84rem;
+  font-weight: 600;
+  color: var(--text-mid);
+  min-width: 160px;
+  text-align: center;
+}
+
 /* ─── Toggle ──────────────────────────────────────────────── */
 .toggle {
   position: relative;

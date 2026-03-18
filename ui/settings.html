@@ -63,26 +63,21 @@
       <div class="section-card">
         <div class="setting-row">
           <div class="setting-info">
-            <span class="setting-title">Whisper Model</span>
-            <span class="setting-desc">Larger models are more accurate but slower. Requires server restart.</span>
+            <span class="setting-title">Transcription Engine</span>
+            <span class="setting-desc">Audio is transcribed via OpenAI Whisper (whisper-1) in the cloud.</span>
           </div>
-          <select class="setting-select" id="setting-whisper-model">
-            <option value="tiny.en">tiny.en — fastest</option>
-            <option value="base.en">base.en</option>
-            <option value="small.en" selected>small.en — recommended</option>
-            <option value="medium.en">medium.en — accurate</option>
-          </select>
+          <span class="setting-badge">whisper-1</span>
         </div>
         <div class="section-divider"></div>
         <div class="setting-row">
           <div class="setting-info">
-            <span class="setting-title">Chunk Duration</span>
-            <span class="setting-desc">How many seconds of audio to transcribe at once.</span>
+            <span class="setting-title">Max Chunk Duration</span>
+            <span class="setting-desc">Hard cap before forcing a new transcription chunk. Splits earlier at natural pauses in speech.</span>
           </div>
           <select class="setting-select" id="setting-chunk-duration">
-            <option value="3">3 seconds</option>
-            <option value="5" selected>5 seconds</option>
-            <option value="10">10 seconds</option>
+            <option value="30">30 seconds</option>
+            <option value="45" selected>45 seconds</option>
+            <option value="60">60 seconds</option>
           </select>
         </div>
       </div>
@@ -93,7 +88,7 @@
         <div class="setting-row">
           <div class="setting-info">
             <span class="setting-title">Summarization Interval</span>
-            <span class="setting-desc">How often Claude generates updated notes while recording.</span>
+            <span class="setting-desc">How often GPT-4.1-mini generates updated notes while recording.</span>
           </div>
           <select class="setting-select" id="setting-summarize-interval">
             <option value="30">Every 30 seconds</option>
