@@ -1,5 +1,6 @@
 :root {
   --bg: #1C1917;
+  --nav-bg: rgba(28, 25, 23, 0.92);
   --bg-card: #242019;
   --bg-elevated: #2E2825;
   --border: #3D3533;
@@ -23,6 +24,7 @@
 /* Light mode overrides */
 [data-theme="light"] {
   --bg:           #FAF9F7;
+  --nav-bg:       rgba(250, 249, 247, 0.92);
   --bg-card:      #F2F0EC;
   --bg-elevated:  #E8E4DE;
   --border:       #D9D4CC;

@@ -23,7 +23,7 @@ export function Nav({ user, center, homeLink = '/home' }) {
       left:           0,
       right:          0,
       height:         'var(--nav-h)',
-      background:     'rgba(28, 25, 23, 0.92)',
+      background:     'var(--nav-bg)',
       backdropFilter: 'blur(12px)',
       WebkitBackdropFilter: 'blur(12px)',
       borderBottom:   '1px solid var(--border)',

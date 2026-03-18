@@ -206,7 +206,7 @@ export default function Session() {
           borderRadius: 'var(--radius)',
           background:   'var(--accent-dim)',
           color:        'var(--accent)',
-          border:       '1px solid rgba(217,119,87,0.25)',
+          border:       '1px solid rgba(110,193,255,0.25)',
           fontSize:     '13px',
           fontWeight:   500,
           cursor:       'pointer',
@@ -232,7 +232,7 @@ export default function Session() {
         left:           0,
         right:          0,
         height:         'var(--nav-h)',
-        background:     'rgba(28, 25, 23, 0.92)',
+        background:     'var(--nav-bg)',
         backdropFilter: 'blur(12px)',
         WebkitBackdropFilter: 'blur(12px)',
         borderBottom:   '1px solid var(--border)',
@@ -636,7 +636,7 @@ function LoadingScreen() {
 function LogoIcon() {
   return (
     <svg width="22" height="22" viewBox="0 0 22 22" fill="none">
-      <rect width="22" height="22" rx="6" fill="#D97757"/>
+      <rect width="22" height="22" rx="6" fill="#6EC1FF"/>
       <path d="M6 7h10M6 11h10M6 15h6" stroke="#fff" strokeWidth="1.8" strokeLinecap="round"/>
     </svg>
   )
