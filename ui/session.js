@@ -82,14 +82,31 @@ async function startMic() {
     ? "audio/webm;codecs=opus"
     : "audio/webm";
 
-  mediaRecorder = new MediaRecorder(micStream, { mimeType });
+  function startCycle() {
+    if (!isRecording) return;
+    mediaRecorder = new MediaRecorder(micStream, { mimeType });
 
-  mediaRecorder.ondataavailable = async (event) => {
-    if (!isRecording || event.data.size < 1000) return; // skip empty/tiny chunks
-    await transcribeChunk(event.data, mimeType);
-  };
+    mediaRecorder.ondataavailable = async (event) => {
+      if (event.data.size > 100) await transcribeChunk(event.data, mimeType);
+    };
 
-  mediaRecorder.start(CHUNK_INTERVAL);
+    mediaRecorder.onstop = () => {
+      // Each stop produces a complete webm file — restart immediately for next chunk
+      if (isRecording) startCycle();
+    };
+
+    mediaRecorder.onerror = (e) => {
+      console.error("MediaRecorder error:", e);
+      setStatus("Mic error — try restarting", false);
+    };
+
+    mediaRecorder.start();
+    setTimeout(() => {
+      if (mediaRecorder && mediaRecorder.state === "recording") mediaRecorder.stop();
+    }, CHUNK_INTERVAL);
+  }
+
+  startCycle();
 }
 
 async function transcribeChunk(blob, mimeType) {
@@ -107,6 +124,7 @@ async function transcribeChunk(blob, mimeType) {
     }
   } catch (err) {
     console.error("Transcription error:", err);
+    setStatus("Transcription error — still recording", true);
   }
 }
 
