@@ -2,7 +2,7 @@ import React, { useEffect, useState } from 'react'
 
 const LogoIcon = () => (
   <svg width="36" height="36" viewBox="0 0 22 22" fill="none" xmlns="http://www.w3.org/2000/svg">
-    <rect width="22" height="22" rx="6" fill="#D97757"/>
+    <rect width="22" height="22" rx="6" fill="#6EC1FF"/>
     <path d="M6 7h10M6 11h10M6 15h6" stroke="#fff" strokeWidth="1.8" strokeLinecap="round"/>
   </svg>
 )
