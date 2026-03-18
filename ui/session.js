@@ -129,16 +129,30 @@ function elapsedLabel() {
 }
 
 function swapRecognition() {
-  // Start fresh instance immediately (no gap), then abort the old one
   const oldRec = recognition;
+
+  // Commit any pending interim text before releasing the mic
+  const interimEl = document.getElementById("interim-line");
+  if (interimEl) {
+    const text = interimEl.textContent.trim();
+    if (text) {
+      removeInterimLine();
+      const elapsed = elapsedLabel();
+      appendTranscript(elapsed, text);
+      send({ action: "transcript", timestamp: elapsed, text });
+    }
+  }
+
+  // Abort old instance to release mic immediately
+  if (oldRec) try { oldRec.abort(); } catch (_) {}
+
+  // Start fresh instance
   recognitionId++;
   recognition = buildRecognition(recognitionId);
   if (recognition) {
     try { recognition.start(); } catch (_) {}
     scheduleRestart();
   }
-  // stop() (not abort()) so old instance finalizes and commits its audio
-  if (oldRec) try { oldRec.stop(); } catch (_) {}
 }
 
 function scheduleRestart() {
