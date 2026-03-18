@@ -1,9 +1,13 @@
 """API routes: WebSocket for live updates, REST for notes export."""
 
 import asyncio
+import io
 import logging
-from fastapi import APIRouter, WebSocket, WebSocketDisconnect
+import os
+
+from fastapi import APIRouter, WebSocket, WebSocketDisconnect, UploadFile, File
 from fastapi.responses import JSONResponse
+from openai import OpenAI
 
 from app.summarization.note_generator import NoteGenerator, SUMMARIZE_INTERVAL
 from app.storage.transcript_store import TranscriptStore
@@ -95,3 +99,25 @@ async def websocket_endpoint(ws: WebSocket):
 def get_notes():
     """Return the current notes as a markdown string."""
     return JSONResponse({"notes": notes_store.get()})
+
+
+@router.post("/transcribe")
+async def transcribe_audio(audio: UploadFile = File(...)):
+    """Receive an audio chunk from the browser and return the transcript via Whisper."""
+    api_key = os.getenv("OPENAI_API_KEY")
+    if not api_key:
+        return JSONResponse({"error": "OPENAI_API_KEY not set"}, status_code=500)
+
+    content = await audio.read()
+    if not content:
+        return JSONResponse({"text": ""})
+
+    try:
+        client = OpenAI(api_key=api_key)
+        audio_file = io.BytesIO(content)
+        audio_file.name = audio.filename or "chunk.webm"
+        result = client.audio.transcriptions.create(model="whisper-1", file=audio_file)
+        return JSONResponse({"text": result.text})
+    except Exception as exc:
+        logger.exception("Whisper transcription error: %s", exc)
+        return JSONResponse({"error": str(exc)}, status_code=500)

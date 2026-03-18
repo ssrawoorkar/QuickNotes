@@ -13,7 +13,8 @@
       "Bash(venv/bin/python -c \"\nfrom app.transcription.whisper_engine import WhisperEngine\nimport numpy as np\nprint\\('Loading Whisper...'\\)\nw = WhisperEngine\\(\\)\nprint\\('Whisper loaded, testing transcription...'\\)\nsilence = np.zeros\\(16000*3, dtype='float32'\\)\nresult = w.transcribe\\(silence\\)\nprint\\('Result on silence:', result\\)\n\")",
       "Bash(pkill:*)",
       "Bash(venv/bin/python -c \"from api.server import app; print\\('Server imports OK'\\)\" 2>&1)",
-      "Bash(venv/bin/python -c \"from api.server import app; print\\('OK'\\)\" 2>&1)"
+      "Bash(venv/bin/python -c \"from api.server import app; print\\('OK'\\)\" 2>&1)",
+      "Bash(git add:*)"
     ]
   }
 }

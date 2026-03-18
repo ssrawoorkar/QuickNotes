@@ -15,9 +15,12 @@ const profileTrigger   = document.getElementById("profile-trigger");
 const profileDropdown  = document.getElementById("profile-dropdown");
 
 let ws             = null;
-let recognition    = null;
+let mediaRecorder  = null;
+let micStream      = null;
 let isRecording    = false;
 let recordingStart = 0;
+
+const CHUNK_INTERVAL = 8000; // send audio to Whisper every 8 seconds
 
 // ── Auth: load current user ──────────────────────────────────────────────
 
@@ -70,51 +73,48 @@ function send(payload) {
   if (ws && ws.readyState === WebSocket.OPEN) ws.send(JSON.stringify(payload));
 }
 
-// ── Speech Recognition ───────────────────────────────────────────────────
+// ── MediaRecorder + Whisper ───────────────────────────────────────────────
 
-function createRecognition() {
-  const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
-  if (!SR) return null;
+async function startMic() {
+  micStream = await navigator.mediaDevices.getUserMedia({ audio: true });
 
-  const r = new SR();
-  r.continuous     = false; // one utterance at a time — Chrome finalizes naturally
-  r.interimResults = true;
-  r.lang           = "en-US";
+  const mimeType = MediaRecorder.isTypeSupported("audio/webm;codecs=opus")
+    ? "audio/webm;codecs=opus"
+    : "audio/webm";
 
-  r.onresult = (event) => {
-    let interimText = "";
-    for (let i = event.resultIndex; i < event.results.length; i++) {
-      if (event.results[i].isFinal) {
-        const text = event.results[i][0].transcript.trim();
-        if (text) {
-          removeInterimLine();
-          appendTranscript(elapsedLabel(), text);
-          send({ action: "transcript", timestamp: elapsedLabel(), text });
-        }
-      } else {
-        interimText += event.results[i][0].transcript;
-      }
-    }
-    if (interimText) showInterimLine(interimText);
+  mediaRecorder = new MediaRecorder(micStream, { mimeType });
+
+  mediaRecorder.ondataavailable = async (event) => {
+    if (!isRecording || event.data.size < 1000) return; // skip empty/tiny chunks
+    await transcribeChunk(event.data, mimeType);
   };
 
-  r.onerror = (e) => {
-    if (e.error === "no-speech" || e.error === "aborted") return;
-    setStatus("Mic error: " + e.error, false);
-  };
-
-  // Restart immediately after each utterance so mic stays on
-  r.onend = () => {
-    removeInterimLine();
-    if (isRecording) startListening();
-  };
-
-  return r;
+  mediaRecorder.start(CHUNK_INTERVAL);
 }
 
-function startListening() {
-  if (!recognition) recognition = createRecognition();
-  try { recognition.start(); } catch (_) {}
+async function transcribeChunk(blob, mimeType) {
+  const ext      = mimeType.includes("webm") ? "webm" : "ogg";
+  const formData = new FormData();
+  formData.append("audio", blob, `chunk.${ext}`);
+
+  try {
+    const res  = await fetch("/transcribe", { method: "POST", body: formData });
+    const data = await res.json();
+    if (data.text && data.text.trim()) {
+      const elapsed = elapsedLabel();
+      appendTranscript(elapsed, data.text.trim());
+      send({ action: "transcript", timestamp: elapsed, text: data.text.trim() });
+    }
+  } catch (err) {
+    console.error("Transcription error:", err);
+  }
+}
+
+function stopMic() {
+  if (mediaRecorder && mediaRecorder.state !== "inactive") mediaRecorder.stop();
+  if (micStream) micStream.getTracks().forEach(t => t.stop());
+  mediaRecorder = null;
+  micStream     = null;
 }
 
 function elapsedLabel() {
@@ -126,12 +126,7 @@ function elapsedLabel() {
 
 // ── Controls ─────────────────────────────────────────────────────────────
 
-btnStart.addEventListener("click", () => {
-  if (!("SpeechRecognition" in window || "webkitSpeechRecognition" in window)) {
-    alert("Speech recognition requires Chrome or Edge. Please switch browsers.");
-    return;
-  }
-
+btnStart.addEventListener("click", async () => {
   btnStart.disabled = true;
   btnStop.disabled  = false;
   isRecording       = true;
@@ -139,11 +134,19 @@ btnStart.addEventListener("click", () => {
   document.querySelectorAll(".empty").forEach(el => el.remove());
   setStatus("Connecting…", false);
 
-  recognition = createRecognition();
+  try {
+    await startMic();
+  } catch (err) {
+    alert("Microphone access denied. Please allow mic access and try again.");
+    isRecording = false;
+    btnStart.disabled = false;
+    btnStop.disabled  = true;
+    setStatus("Idle", false);
+    return;
+  }
 
   const startRecording = () => {
     send({ action: "start" });
-    startListening();
     setStatus("Recording…", true);
   };
 
@@ -156,11 +159,7 @@ btnStart.addEventListener("click", () => {
 
 btnStop.addEventListener("click", () => {
   isRecording = false;
-  if (recognition) {
-    try { recognition.abort(); } catch (_) {}
-    recognition = null;
-  }
-  removeInterimLine();
+  stopMic();
   send({ action: "stop" });
   btnStart.disabled = false;
   btnStop.disabled  = true;
@@ -168,23 +167,6 @@ btnStop.addEventListener("click", () => {
 });
 
 // ── Transcript ───────────────────────────────────────────────────────────
-
-function showInterimLine(text) {
-  let interim = document.getElementById("interim-line");
-  if (!interim) {
-    interim = document.createElement("div");
-    interim.id = "interim-line";
-    interim.className = "t-line t-interim";
-    transcriptOutput.appendChild(interim);
-  }
-  interim.textContent = text;
-  transcriptOutput.scrollTop = transcriptOutput.scrollHeight;
-}
-
-function removeInterimLine() {
-  const el = document.getElementById("interim-line");
-  if (el) el.remove();
-}
 
 function appendTranscript(timestamp, text) {
   const line = document.createElement("div");
