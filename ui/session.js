@@ -75,24 +75,38 @@ function send(payload) {
 
 // ── MediaRecorder + Whisper ───────────────────────────────────────────────
 
+function getRecordingMimeType() {
+  const candidates = [
+    "audio/webm;codecs=opus",
+    "audio/webm",
+    "audio/ogg;codecs=opus",
+    "audio/ogg",
+    "audio/mp4",
+  ];
+  return candidates.find(t => MediaRecorder.isTypeSupported(t)) || "";
+}
+
+function mimeToExt(mimeType) {
+  if (mimeType.includes("webm")) return "webm";
+  if (mimeType.includes("ogg"))  return "ogg";
+  if (mimeType.includes("mp4"))  return "mp4";
+  return "webm";
+}
+
 async function startMic() {
   micStream = await navigator.mediaDevices.getUserMedia({ audio: true });
 
-  const mimeType = MediaRecorder.isTypeSupported("audio/webm;codecs=opus")
-    ? "audio/webm;codecs=opus"
-    : "audio/webm";
+  const mimeType = getRecordingMimeType();
+  console.log("Recording mimeType:", mimeType || "(browser default)");
 
   function startCycle() {
     if (!isRecording) return;
-    mediaRecorder = new MediaRecorder(micStream, { mimeType });
+    mediaRecorder = mimeType
+      ? new MediaRecorder(micStream, { mimeType })
+      : new MediaRecorder(micStream);
 
     mediaRecorder.ondataavailable = async (event) => {
       if (event.data.size > 100) await transcribeChunk(event.data, mimeType);
-    };
-
-    mediaRecorder.onstop = () => {
-      // Each stop produces a complete webm file — restart immediately for next chunk
-      if (isRecording) startCycle();
     };
 
     mediaRecorder.onerror = (e) => {
@@ -102,7 +116,15 @@ async function startMic() {
 
     mediaRecorder.start();
     setTimeout(() => {
-      if (mediaRecorder && mediaRecorder.state === "recording") mediaRecorder.stop();
+      if (!isRecording) {
+        // Recording stopped — just flush the current chunk
+        if (mediaRecorder && mediaRecorder.state === "recording") mediaRecorder.stop();
+        return;
+      }
+      // Start next cycle BEFORE stopping current so there's zero gap in audio capture
+      const prev = mediaRecorder;
+      startCycle();
+      if (prev.state === "recording") prev.stop();
     }, CHUNK_INTERVAL);
   }
 
@@ -110,8 +132,9 @@ async function startMic() {
 }
 
 async function transcribeChunk(blob, mimeType) {
-  const ext      = mimeType.includes("webm") ? "webm" : "ogg";
-  const formData = new FormData();
+  const resolvedType = blob.type || mimeType;
+  const ext          = mimeToExt(resolvedType);
+  const formData     = new FormData();
   formData.append("audio", blob, `chunk.${ext}`);
 
   try {
