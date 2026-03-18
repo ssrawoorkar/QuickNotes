@@ -17,10 +17,15 @@ const profileDropdown  = document.getElementById("profile-dropdown");
 let ws             = null;
 let mediaRecorder  = null;
 let micStream      = null;
+let audioCtx       = null;
+let silencePoller  = null;
 let isRecording    = false;
 let recordingStart = 0;
 
-const CHUNK_INTERVAL = 8000; // send audio to Whisper every 8 seconds
+const SILENCE_THRESHOLD  = 0.015; // RMS below this = silence
+const SILENCE_DURATION   = 600;   // ms of continuous silence before splitting
+const MIN_CHUNK_MS       = 1000;  // never split before 1 s of audio
+const MAX_CHUNK_MS       = 45000; // hard cap — split even if no pause
 
 // ── Auth: load current user ──────────────────────────────────────────────
 
@@ -99,6 +104,33 @@ async function startMic() {
   const mimeType = getRecordingMimeType();
   console.log("Recording mimeType:", mimeType || "(browser default)");
 
+  // ── Silence detection via Web Audio ──────────────────────────────────────
+  audioCtx = new AudioContext();
+  const source   = audioCtx.createMediaStreamSource(micStream);
+  const analyser = audioCtx.createAnalyser();
+  analyser.fftSize = 512;
+  source.connect(analyser);
+  const pcmBuf = new Float32Array(analyser.frequencyBinCount);
+
+  function getRMS() {
+    analyser.getFloatTimeDomainData(pcmBuf);
+    let sum = 0;
+    for (let i = 0; i < pcmBuf.length; i++) sum += pcmBuf[i] * pcmBuf[i];
+    return Math.sqrt(sum / pcmBuf.length);
+  }
+
+  // ── Chunk cycle ───────────────────────────────────────────────────────────
+  let chunkStart   = 0;
+  let silenceStart = null;
+
+  function splitChunk() {
+    if (!mediaRecorder || mediaRecorder.state !== "recording") return;
+    const prev = mediaRecorder;
+    startCycle();        // new recorder starts immediately — zero gap
+    prev.stop();         // flush previous chunk
+    silenceStart = null;
+  }
+
   function startCycle() {
     if (!isRecording) return;
     mediaRecorder = mimeType
@@ -115,18 +147,29 @@ async function startMic() {
     };
 
     mediaRecorder.start();
-    setTimeout(() => {
-      if (!isRecording) {
-        // Recording stopped — just flush the current chunk
-        if (mediaRecorder && mediaRecorder.state === "recording") mediaRecorder.stop();
-        return;
-      }
-      // Start next cycle BEFORE stopping current so there's zero gap in audio capture
-      const prev = mediaRecorder;
-      startCycle();
-      if (prev.state === "recording") prev.stop();
-    }, CHUNK_INTERVAL);
+    chunkStart   = Date.now();
+    silenceStart = null;
   }
+
+  // Poll audio level every 100 ms for silence / hard-cap detection
+  silencePoller = setInterval(() => {
+    if (!isRecording) return;
+    const elapsed = Date.now() - chunkStart;
+
+    // Hard cap — split regardless of audio level
+    if (elapsed >= MAX_CHUNK_MS) { splitChunk(); return; }
+
+    // Too short — don't split yet
+    if (elapsed < MIN_CHUNK_MS) { silenceStart = null; return; }
+
+    const rms = getRMS();
+    if (rms < SILENCE_THRESHOLD) {
+      if (!silenceStart) silenceStart = Date.now();
+      else if (Date.now() - silenceStart >= SILENCE_DURATION) splitChunk();
+    } else {
+      silenceStart = null;
+    }
+  }, 100);
 
   startCycle();
 }
@@ -152,6 +195,9 @@ async function transcribeChunk(blob, mimeType) {
 }
 
 function stopMic() {
+  clearInterval(silencePoller);
+  silencePoller = null;
+  if (audioCtx) { audioCtx.close(); audioCtx = null; }
   if (mediaRecorder && mediaRecorder.state !== "inactive") mediaRecorder.stop();
   if (micStream) micStream.getTracks().forEach(t => t.stop());
   mediaRecorder = null;
