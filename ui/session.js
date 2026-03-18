@@ -84,13 +84,17 @@ function buildRecognition() {
     let interimText = "";
     for (let i = event.resultIndex; i < event.results.length; i++) {
       if (event.results[i].isFinal) {
-        const text      = event.results[i][0].transcript.trim();
-        const timestamp = new Date().toLocaleTimeString("en-US", { hour12: false });
-        if (text) {
+        const raw = event.results[i][0].transcript.trim();
+        // Split long results into sentence-sized chunks for readable display
+        const sentences = raw.match(/[^.!?]+[.!?]*/g) || [raw];
+        sentences.forEach(sentence => {
+          const text = sentence.trim();
+          if (!text) return;
+          const timestamp = new Date().toLocaleTimeString("en-US", { hour12: false });
           removeInterimLine();
           appendTranscript(timestamp, text);
           send({ action: "transcript", timestamp, text });
-        }
+        });
       } else {
         interimText += event.results[i][0].transcript;
       }
@@ -99,13 +103,16 @@ function buildRecognition() {
   };
 
   r.onerror = (e) => {
-    if (e.error === "no-speech") return; // ignore silence gaps
+    // no-speech and aborted are normal — just restart
+    if (e.error === "no-speech" || e.error === "aborted") return;
     setStatus("Mic error: " + e.error, false);
   };
 
-  // Auto-restart on end so long lectures aren't cut off
+  // Auto-restart whenever recognition ends while still recording
   r.onend = () => {
-    if (isRecording) r.start();
+    if (isRecording) {
+      try { r.start(); } catch (_) {}
+    }
   };
 
   return r;
