@@ -14,12 +14,14 @@ const profileName      = document.getElementById("profile-name");
 const profileTrigger   = document.getElementById("profile-trigger");
 const profileDropdown  = document.getElementById("profile-dropdown");
 
-let ws              = null;
-let recognition     = null;
-let isRecording     = false;
-let restartTimer    = null;
+let ws               = null;
+let recognition      = null;
+let isRecording      = false;
+let restartTimer     = null;
+let recognitionId    = 0;       // incremented on each new instance to suppress stale onend
+let recordingStart   = 0;       // Date.now() when recording began
 
-const RESTART_INTERVAL = 25000; // restart every 25s before Chrome's ~60s hard limit
+const RESTART_INTERVAL = 10000; // swap instances every 10s
 
 // ── Auth: load current user ──────────────────────────────────────────────
 
@@ -74,29 +76,28 @@ function send(payload) {
 
 // ── Speech Recognition ───────────────────────────────────────────────────
 
-function buildRecognition() {
+function buildRecognition(id) {
   const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
   if (!SR) return null;
 
   const r = new SR();
-  r.continuous      = true;
-  r.interimResults  = true;
-  r.lang            = "en-US";
+  r.continuous     = true;
+  r.interimResults = true;
+  r.lang           = "en-US";
 
   r.onresult = (event) => {
     let interimText = "";
     for (let i = event.resultIndex; i < event.results.length; i++) {
       if (event.results[i].isFinal) {
         const raw = event.results[i][0].transcript.trim();
-        // Split long results into sentence-sized chunks for readable display
         const sentences = raw.match(/[^.!?]+[.!?]*/g) || [raw];
         sentences.forEach(sentence => {
           const text = sentence.trim();
           if (!text) return;
-          const timestamp = new Date().toLocaleTimeString("en-US", { hour12: false });
+          const elapsed = elapsedLabel();
           removeInterimLine();
-          appendTranscript(timestamp, text);
-          send({ action: "transcript", timestamp, text });
+          appendTranscript(elapsed, text);
+          send({ action: "transcript", timestamp: elapsed, text });
         });
       } else {
         interimText += event.results[i][0].transcript;
@@ -106,29 +107,43 @@ function buildRecognition() {
   };
 
   r.onerror = (e) => {
-    // no-speech and aborted are normal — just restart
     if (e.error === "no-speech" || e.error === "aborted") return;
     setStatus("Mic error: " + e.error, false);
   };
 
-  // Auto-restart whenever recognition ends while still recording
+  // Only restart if this instance is still the active one
   r.onend = () => {
-    clearTimeout(restartTimer);
-    if (isRecording) {
-      try {
-        r.start();
-        scheduleRestart(r);
-      } catch (_) {}
+    if (isRecording && id === recognitionId) {
+      swapRecognition();
     }
   };
 
   return r;
 }
 
-function scheduleRestart(r) {
+function elapsedLabel() {
+  const secs = Math.floor((Date.now() - recordingStart) / 1000);
+  if (secs < 60) return `${secs}s`;
+  const m = Math.floor(secs / 60), s = secs % 60;
+  return `${m}m ${s}s`;
+}
+
+function swapRecognition() {
+  // Start fresh instance immediately (no gap), then abort the old one
+  const oldRec = recognition;
+  recognitionId++;
+  recognition = buildRecognition(recognitionId);
+  if (recognition) {
+    try { recognition.start(); } catch (_) {}
+    scheduleRestart();
+  }
+  if (oldRec) try { oldRec.abort(); } catch (_) {}
+}
+
+function scheduleRestart() {
   clearTimeout(restartTimer);
   restartTimer = setTimeout(() => {
-    if (isRecording) r.stop(); // graceful stop → onend fires → restarts
+    if (isRecording) swapRecognition();
   }, RESTART_INTERVAL);
 }
 
@@ -143,15 +158,17 @@ btnStart.addEventListener("click", () => {
   btnStart.disabled = true;
   btnStop.disabled  = false;
   isRecording       = true;
+  recordingStart    = Date.now();
   document.querySelectorAll(".empty").forEach(el => el.remove());
   setStatus("Connecting…", false);
 
-  recognition = buildRecognition();
+  recognitionId++;
+  recognition = buildRecognition(recognitionId);
 
   const startRecording = () => {
     send({ action: "start" });
     recognition.start();
-    scheduleRestart(recognition);
+    scheduleRestart();
     setStatus("Recording…", true);
   };
 
